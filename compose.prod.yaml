@@ -58,7 +58,7 @@ services:
 
   app:
     build:
-      context: ./app
+      image: ghcr.io/sayu47/devops-task-tracker:${IMAGE_TAG}
     image: devops-task-tracker:1.0
     environment:
       DB_HOST: db
