@@ -57,9 +57,7 @@ services:
     restart: "no" 
 
   app:
-    build:
-      image: ghcr.io/sayu47/devops-task-tracker:${IMAGE_TAG}
-    image: devops-task-tracker:1.0
+    image: ghcr.io/sayu47/devops-task-tracker:${IMAGE_TAG}
     environment:
       DB_HOST: db
       DB_PORT: "5432"
