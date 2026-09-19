@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func readPassword() (string, error) {
@@ -23,7 +23,29 @@ func readPassword() (string, error) {
 	return strings.TrimSpace(string(data)), nil
 }
 
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		next.ServeHTTP(w, r)
+
+		if r.URL.Path != "/health" {
+			slog.Info(
+				"http request",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"remote_address", r.RemoteAddr,
+				"duration_ms", time.Since(start).Milliseconds(),
+			)
+		}
+	})
+}
+
 func main() {
+	slog.SetDefault(
+		slog.New(slog.NewJSONHandler(os.Stdout, nil)),
+	)
+
 	password, err := readPassword()
 	if err != nil {
 		log.Fatal("Cannot read database password: ", err)
@@ -79,5 +101,6 @@ func main() {
 
 	http.HandleFunc("/api/tasks", tasksHandler(db))
 	log.Println("Server started on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	slog.Info("server started", "port", 8080)
+	log.Fatal(http.ListenAndServe(":8080", loggingMiddleware(http.DefaultServeMux)))
 }
