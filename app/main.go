@@ -74,7 +74,8 @@ func main() {
 			return
 		}
 
-		fmt.Fprintln(w, `{"status":"healthy","database":"connected"}`)
+		w.WriteHeader(http.StatusServiceUnavailable)
+		fmt.Fprintln(w, `{"status":"unhealthy","database":"connected","test":"rollback"}`)
 	})
 
 	http.HandleFunc("/api/tasks", tasksHandler(db))
